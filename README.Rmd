@@ -1,0 +1,228 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# What is tractR?
+
+The goal of *tractR* is simply to organize in a more organic way the functions that I have implemented during my MSc thesis project: [**Modeling the prehistory of early modern humans using markers of Neanderthal introgression**][https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf]. Essentially, most of the functions are needed to encode introgressed tracts table into binary matrices and summarize the information stored into the binary matrices using statistics that we developed, such as the Tract Frequency Spectrum (TFS). I decided to organize it into an R package so to make it more reproducible and to ease the reuse of these functions.
+
+Here, you can find some basic examples on how to use these functions.
+
+## Installation
+
+You can install the development version of tractR from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("pak")
+devtools::install_github("fil-tel/tractR")
+```
+
+## Basic tutorial
+
+Here I am going to show some examples.
+
+```{r example}
+suppressPackageStartupMessages({
+  library(tractR)
+  library(readr)
+  library(dplyr)
+  library(tidyr)
+  library(magrittr)
+  # These two are needed as all the functions to obtain
+  # binary matrices depend on GenomicRanges
+  library(GenomicRanges)
+  library(plyranges)
+})
+```
+
+## Brief description of my thesis
+
+Briefly, during my MSc I explored several ways to use Neanderthal introgressed tracts into the modern human genome as a source of information to study both the interaction between modern humans and Neanderthals and the prehistory of the first early modern humans that left Africa. Given that the Neanderthals introgressed tracts we worked with were stored in a tabular format, the first step was to encode them into a more useful type of data structure. To do so, we came up with four different approaches, described in my thesis, that lead to the representation of the tracts as binary matrices. Here, starting from both simulated and empirical tracts table I will show how to obtain the binary matrices.
+NOTE: simulated and empirical need to be processed using different functions, this because of the different nature of the data (i.e. variable chromosomes length, number of chromosomes, etc.)
+
+Examples of both simulated and empirical data can be found at *inst/extdata*.
+
+## Simulated data
+
+```{r}
+# read the data
+tracts_sim_df <- read_tsv(system.file("extdata", "model1_A_5000_rep1_tracts.tsv.gz", package = "tractR"))
+```
+Look at the data.
+
+```{r}
+head(tracts_sim_df)
+glimpse(tracts_sim_df)
+```
+
+To standardize the whole process, the tracts dataframe needs to be conveted into GRanges objects in order to obtain a binary matrix.
+
+```{r}
+# NOTE that I add a column "chrom" just for simplicity as usually the tracts in slendr do not have it since by default the genome has only one chromosome
+# NOTE: it is important that the column with the ID of the individual is called "name" 
+
+tracts_sim_df$chrom <- "chr1"
+
+tracts_sim_gr <- tracts_sim_df %>% makeGRangesFromDataFrame(keep.extra.columns = TRUE, seqnames.field = "chrom", start.field = "left", end.field = "right")
+```
+
+At this point to get the binary matrix it is enough to pass the tracts in its GRanges object form to the corresponding function *get_bin_mat_APPROACHNAME_sim*.
+
+## Uniqueness approach
+
+Brief remind of the approach:
+Each row of the matrix corresponds to a unique tract.
+
+```{r}
+bin_mat_unique_sim <- get_bin_mat_unique_sim(tracts_sim_gr)
+bin_mat_unique_sim[1:5, 1:5]
+```
+
+## Windows approach
+
+Brief remind of the approach:
+The boundaries of the bins are defined by a window and step size. 
+
+```{r}
+# note that I am specifying the length of the simulated chromosome, size of the windows and the step size of the binning
+bin_mat_wind_sim <- get_bin_mat_windows_sim(tracts_sim_gr, len_chr = 100e6, window_size = 50e3, step_size = 50e3)
+bin_mat_wind_sim[1:5, 1:5]
+```
+
+## Subtracts approach
+
+Brief remind of the approach:
+The boundaries of the bins are defined by the set of recombination sites. 
+
+```{r}
+bin_mat_subtracts_sim <- get_bin_mat_subtracts_sim(tracts_sim_gr)
+bin_mat_subtracts_sim[1:5, 1:5]
+```
+
+## Recombination breakpoint approach
+
+Brief remind of the approach:
+Each row of the matrix corresponds to a recombination breakpoint position.
+
+```{r}
+bin_mat_site_sim <- get_bin_mat_sites_sim(tracts_sim_gr)
+bin_mat_site_sim[1:5, 1:5]
+```
+
+## Empirical data
+
+```{r}
+# read the data
+tracts_emp_df <- read_tsv(system.file("extdata", "Vindija33.19_raw_eurasian_wModern_filtered", package = "tractR"))
+```
+
+Look at the data.
+
+```{r}
+head(tracts_emp_df)
+glimpse(tracts_emp_df)
+```
+
+```{r}
+# NOTE: it is important that the column with the ID it is called name 
+tracts_emp_df <- tracts_emp_df %>% rename(ID="name")
+tracts_emp_gr <- tracts_emp_df %>% makeGRangesFromDataFrame(keep.extra.columns = TRUE)
+```
+
+At this point to get the binary matrix it is enough to pass the tracts in its GRanges object form to the corresponding function *get_bin_mat_APPROACHNAME_emp*.
+
+## Uniqueness approach
+
+Brief remind of the approach:
+Each row of the matrix corresponds to a unique tract.
+
+```{r}
+bin_mat_unique_emp <- get_bin_mat_unique_emp(tracts_emp_gr)
+bin_mat_unique_emp[1:5, 1:5]
+```
+
+## Windows approach
+
+Brief remind of the approach:
+The boundaries of the bins are defined by a window and step size. 
+
+```{r}
+# note that I am specifying the size of the windows and the step size of the binning
+tstart <- Sys.time()
+bin_mat_wind_emp <- get_bin_mat_windows_emp(tracts_emp_gr, window_size = 50e3, step_size = 50e3)
+tend <- Sys.time()
+tend-tstart
+bin_mat_wind_emp[1:5, 1:5]
+```
+
+## Subtracts approach
+
+Brief remind of the approach:
+The boundaries of the bins are defined by the set of recombination sites. 
+
+```{r}
+bin_mat_subtracts_emp <- get_bin_mat_subtracts_emp(tracts_emp_gr)
+bin_mat_subtracts_emp[1:5, 1:5]
+```
+
+## Recombination breakpoint approach
+
+Brief remind of the approach:
+Each row of the matrix corresponds to a recombination breakpoint position.
+
+```{r}
+bin_mat_site_emp <- get_bin_mat_sites_emp(tracts_emp_gr)
+bin_mat_site_emp[1:5, 1:5]
+```
+
+
+# TFS
+
+Here I show how to compute and visualize the Tract Frequency Spectrum (TFS) given a binary matrix.
+Briefly, the TFS is simply a vector of length equal to the number of sampled chromosome/individuals (this vary depending on how the tracts are defined, e.g., IBDmix gives tracts per individuals and not chromosomes, simulations give tracts per each chromosome). 
+I'll use as an example the binary matrix for the subtracts approach for the simulated dataset. In the simulated dataset I have 100 sampled individuals, each individual is diploid, so as a result I have 100 sampled chromosomes. Hence, the binary matrix has 100 columns. Note that this is not always true if for some sampled individuals chromosomes do not have any tracts.
+
+```{r}
+ncol(bin_mat_subtracts_sim)
+```
+
+Now I compute the TFS fot his matrix using he function *compute_tfs*.
+
+```{r}
+# Note that I specify the number of samples. In this case is equal to 100
+tfs_vec <- compute_tfs(bin_mat_subtracts_sim, n_sample = 100)
+# The vector store the proportion of counts per each bin of the histogram
+tfs_vec
+
+length(tfs_vec)
+# 100
+```
+
+Now you can just visualize it.
+
+```{r}
+library(ggplot2)
+ggplot(data = data.frame(x=1:length(tfs_vec), y=tfs_vec))+geom_bar(mapping = aes(x=x, y=y), stat = "identity")+labs(x="Frequency class", y="Proportion of counts", title="TFS")
+```
+
+# Graph-based tract sharing data structure
+
+Here I present the functions to obtain the graph-based tract sharing data structure introduced in my MSc thesis.
+Briefly, the idea is that given a set of tracts intersecting a specific genomic regions we can link these individuals using as information the sharing of recombination breakpoints that belong to these tracts (Section 2.2.6 of the [thesis][https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf]).
+
+```{r}
+
+```
+
+
