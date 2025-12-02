@@ -1,0 +1,72 @@
+---
+title: "Basic tutorial"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Basic tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## What is tractR?
+
+The *tractR* R package is simply a collection of functions that I implemented during my MSc thesis project: **Modeling the prehistory of early modern humans using markers of Neanderthal introgression** (https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf). Essentially, most of the functions are needed to encode introgressed tracts table into binary matrices and summarize the information stored into the binary matrices using statistics that we developed, such as the Tract Frequency Spectrum (TFS). I decided to organize it into an R package so to make it more reproducible and to ease the reuse of these functions.
+
+In this vignette, I show some basic examples on how to use these functions.
+
+## Packages loading
+
+```{r setup}
+suppressPackageStartupMessages({
+  library(tractR)
+  library(readr)
+  library(dplyr)
+  library(tidyr)
+  library(magrittr)
+  # These two are needed as all the functions to obtain
+  # binary matrices depend on GenomicRanges
+  library(GenomicRanges)
+  library(plyranges)
+})
+```
+
+## Brief description of my thesis
+
+Briefly, during my MSc I explored several ways to use Neanderthal introgressed tracts into the modern human genome as a source of information to study both the interaction between modern humans and Neanderthals and the prehistory of the first early modern humans that left Africa. Given that the Neanderthals introgressed tracts we worked with were stored in a tabular format, the first step was to encode them into a more useful type of data structure. To do so, we came up with four different approaches, described in my thesis, that lead to the representation of the tracts as binary matrices. Here, starting from both simulated and empirical tracts table I will show how to obtain the binary matrices.
+NOTE: simulated and empirical need to be processed using different functions, this because of the different nature of the data (i.e. variable chromosomes length, number of chromosomes, etc.)
+
+Examples of both simulated and empirical data can be found at *inst/extdata*.
+
+## Simulated data
+
+```{r}
+# read the data
+tracts_sim_df <- read_tsv(system.file("extdata", "model1_A_5000_rep1_tracts.tsv.gz", package = "tractR"))
+```
+Look at the data.
+
+```{r}
+head(tracts_sim_df)
+glimpse(tracts_sim_df)
+```
+
+To standardize the whole process, in order to obtain a binary matrices the tracts dataframe need to be conveted into GRanges objects.
+
+```{r}
+# NOTE that I add a column "chrom" just for simplicity as usually the tracts in slendr do not have it since by default the genome has only one chromosome
+
+tracts_sim_df$chrom <- "chr1"
+
+tracts_sim_gr <- tracts_sim_df %>% makeGRangesFromDataFrame(keep.extra.columns = TRUE, seqnames.field = "chrom", start.field = "left", end.field = "right")
+```
+
+
+
+
+
