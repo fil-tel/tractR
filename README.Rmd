@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 
 # What is tractR?
 
-The goal of *tractR* is simply to organize in a more organic way the functions that I have implemented during my MSc thesis project: [**Modeling the prehistory of early modern humans using markers of Neanderthal introgression**][https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf]. Essentially, most of the functions are needed to encode introgressed tracts table into binary matrices and summarize the information stored into the binary matrices using statistics that we developed, such as the Tract Frequency Spectrum (TFS). I decided to organize it into an R package so to make it more reproducible and to ease the reuse of these functions.
+The goal of *tractR* is simply to organize in a more organic way the functions that I have implemented during my MSc thesis project: [**Modeling the prehistory of early modern humans using markers of Neanderthal introgression**](https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf). Essentially, most of the functions are needed to encode introgressed tracts table into binary matrices and summarize the information stored into the binary matrices using statistics that we developed, such as the Tract Frequency Spectrum (TFS). I decided to organize it into an R package so to make it more reproducible and to ease the reuse of these functions.
 
 Here, you can find some basic examples on how to use these functions.
 
@@ -219,7 +219,7 @@ ggplot(data = data.frame(x=1:length(tfs_vec), y=tfs_vec))+geom_bar(mapping = aes
 # Graph-based tract sharing data structure
 
 Here I present the functions to obtain the graph-based tract sharing data structure introduced in my MSc thesis.
-Briefly, the idea is that given a set of tracts intersecting a specific genomic regions we can link these individuals using as information the sharing of recombination breakpoints that belong to these tracts (Section 2.2.6 of the [thesis][https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf]).
+Briefly, the idea is that given a set of tracts intersecting a specific genomic regions we can link these individuals using as information the sharing of recombination breakpoints that belong to these tracts (Section 2.2.6 of the [thesis](https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf)).
 
 ```{r}
 

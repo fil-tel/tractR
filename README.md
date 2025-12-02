@@ -5,9 +5,9 @@
 
 The goal of *tractR* is simply to organize in a more organic way the
 functions that I have implemented during my MSc thesis project:
-\[**Modeling the prehistory of early modern humans using markers of
+[**Modeling the prehistory of early modern humans using markers of
 Neanderthal
-introgression**\]\[<https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf>\].
+introgression**](https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf).
 Essentially, most of the functions are needed to encode introgressed
 tracts table into binary matrices and summarize the information stored
 into the binary matrices using statistics that we developed, such as the
@@ -225,7 +225,7 @@ bin_mat_site_sim[1:5, 1:5]
 ``` r
 # read the data
 tracts_emp_df <- read_tsv(system.file("extdata", "Vindija33.19_raw_eurasian_wModern_filtered", package = "tractR"))
-#> Rows: 87584 Columns: 6
+#> Rows: 44023 Columns: 6
 #> ── Column specification ────────────────────────────────────────────────────────
 #> Delimiter: "\t"
 #> chr (3): ID, chrom, set
@@ -242,20 +242,20 @@ head(tracts_emp_df)
 #> # A tibble: 6 × 6
 #>   ID    chrom     start       end length set    
 #>   <chr> <chr>     <dbl>     <dbl>  <dbl> <chr>  
-#> 1 6DT23 chr6   32705981  33139328 433347 Ancient
-#> 2 6DT23 chr13  21947766  22031669  83903 Ancient
-#> 3 6DT23 chr2   82329081  82485327 156246 Ancient
-#> 4 6DT23 chr2   33198474  33323238 124764 Ancient
-#> 5 6DT23 chr9    4995633   5106023 110390 Ancient
-#> 6 6DT23 chr8  122503206 122562447  59241 Ancient
+#> 1 84005 chr4  102131955 102205398  73443 Ancient
+#> 2 84005 chr10   3730051   3788850  58799 Ancient
+#> 3 84005 chr1   79659418  79830100 170682 Ancient
+#> 4 84005 chr18  62347905  62424274  76369 Ancient
+#> 5 84005 chr10   5084852   5357328 272476 Ancient
+#> 6 84005 chr4   82386470  82521768 135298 Ancient
 glimpse(tracts_emp_df)
-#> Rows: 87,584
+#> Rows: 44,023
 #> Columns: 6
-#> $ ID     <chr> "6DT23", "6DT23", "6DT23", "6DT23", "6DT23", "6DT23", "6DT23", …
-#> $ chrom  <chr> "chr6", "chr13", "chr2", "chr2", "chr9", "chr8", "chr8", "chr21…
-#> $ start  <dbl> 32705981, 21947766, 82329081, 33198474, 4995633, 122503206, 104…
-#> $ end    <dbl> 33139328, 22031669, 82485327, 33323238, 5106023, 122562447, 105…
-#> $ length <dbl> 433347, 83903, 156246, 124764, 110390, 59241, 518687, 62621, 60…
+#> $ ID     <chr> "84005", "84005", "84005", "84005", "84005", "84005", "84005", …
+#> $ chrom  <chr> "chr4", "chr10", "chr1", "chr18", "chr10", "chr4", "chr10", "ch…
+#> $ start  <dbl> 102131955, 3730051, 79659418, 62347905, 5084852, 82386470, 1899…
+#> $ end    <dbl> 102205398, 3788850, 79830100, 62424274, 5357328, 82521768, 1923…
+#> $ length <dbl> 73443, 58799, 170682, 76369, 272476, 135298, 232971, 118449, 15…
 #> $ set    <chr> "Ancient", "Ancient", "Ancient", "Ancient", "Ancient", "Ancient…
 ```
 
@@ -277,12 +277,12 @@ unique tract.
 ``` r
 bin_mat_unique_emp <- get_bin_mat_unique_emp(tracts_emp_gr)
 bin_mat_unique_emp[1:5, 1:5]
-#>                         6DT23 84005 atp016 bal004 Bar31
-#> chr6:32705981-33139328      1     0      0      0     0
-#> chr13:21947766-22031669     1     0      0      0     0
-#> chr2:82329081-82485327      1     0      0      0     0
-#> chr2:33198474-33323238      1     0      0      0     0
-#> chr9:4995633-5106023        1     0      0      0     1
+#>                          84005 Bar31 Bon004 BOT14 BOT2016
+#> chr4:102131955-102205398     1     0      0     0       0
+#> chr10:3730051-3788850        1     0      0     0       0
+#> chr1:79659418-79830100       1     0      0     0       0
+#> chr18:62347905-62424274      1     0      0     0       0
+#> chr10:5084852-5357328        1     0      0     0       0
 ```
 
 ## Windows approach
@@ -296,14 +296,14 @@ tstart <- Sys.time()
 bin_mat_wind_emp <- get_bin_mat_windows_emp(tracts_emp_gr, window_size = 50e3, step_size = 50e3)
 tend <- Sys.time()
 tend-tstart
-#> Time difference of 15.17343 secs
+#> Time difference of 10.23623 secs
 bin_mat_wind_emp[1:5, 1:5]
-#>                      6DT23 84005 atp016 bal004 Bar31
-#> chr1:1950001-2000000     0     0      0      0     0
-#> chr1:2000001-2050000     0     0      0      0     0
-#> chr1:2050001-2100000     0     0      0      0     0
-#> chr1:2350001-2400000     0     0      1      0     0
-#> chr1:2400001-2450000     0     0      1      0     0
+#>                      84005 Bar31 Bon004 BOT14 BOT2016
+#> chr1:2350001-2400000     0     0      0     0       0
+#> chr1:2400001-2450000     0     0      0     0       0
+#> chr1:2450001-2500000     0     0      0     0       0
+#> chr1:2500001-2550000     0     0      0     0       0
+#> chr1:2550001-2600000     0     0      0     0       0
 ```
 
 ## Subtracts approach
@@ -314,12 +314,12 @@ the set of recombination sites.
 ``` r
 bin_mat_subtracts_emp <- get_bin_mat_subtracts_emp(tracts_emp_gr)
 bin_mat_subtracts_emp[1:5, 1:5]
-#>                    6DT23 84005 atp016 bal004 Bar31
-#> chr6:382374-382559     0     0      0      0     0
-#> chr6:382559-400701     0     0      0      0     0
-#> chr6:400701-468157     0     0      0      0     0
-#> chr6:468157-469716     0     0      0      0     0
-#> chr6:488086-494314     1     0      0      0     0
+#>                    84005 Bar31 Bon004 BOT14 BOT2016
+#> chr4:74508-77446       0     0      0     0       0
+#> chr4:77446-109558      0     0      0     0       0
+#> chr4:109558-201202     0     0      0     0       0
+#> chr4:201202-317515     0     0      0     0       0
+#> chr4:317515-319208     0     0      0     0       0
 ```
 
 ## Recombination breakpoint approach
@@ -330,12 +330,12 @@ recombination breakpoint position.
 ``` r
 bin_mat_site_emp <- get_bin_mat_sites_emp(tracts_emp_gr)
 bin_mat_site_emp[1:5, 1:5]
-#>             6DT23 84005 atp016 bal004 Bar31
-#> chr6:382374     0     0      0      0     0
-#> chr6:382559     0     0      0      0     0
-#> chr6:400701     0     0      0      0     0
-#> chr6:468157     0     0      0      0     0
-#> chr6:469716     0     0      0      0     0
+#>             84005 Bar31 Bon004 BOT14 BOT2016
+#> chr4:74508      0     0      0     0       0
+#> chr4:77446      0     0      0     0       0
+#> chr4:109558     0     0      0     0       0
+#> chr4:201202     0     0      0     0       0
+#> chr4:317515     0     0      0     0       0
 ```
 
 # TFS
@@ -406,4 +406,4 @@ data structure introduced in my MSc thesis. Briefly, the idea is that
 given a set of tracts intersecting a specific genomic regions we can
 link these individuals using as information the sharing of recombination
 breakpoints that belong to these tracts (Section 2.2.6 of the
-\[thesis\]\[<https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf>\]).
+[thesis](https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf)).
