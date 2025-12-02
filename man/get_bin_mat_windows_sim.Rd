@@ -8,11 +8,12 @@ get_bin_mat_windows_sim(
   tracts_gr,
   window_size = 50000,
   step_size = 50000,
-  len_chr = NULL
+  len_chr = NULL,
+  ncores = 1
 )
 }
 \arguments{
-\item{len_chr}{}
+\item{ncores}{}
 }
 \description{
 Get binary matrix of tracts for windows approach - SIMULATION

@@ -11,8 +11,11 @@ RoxygenNote: 7.3.2
 biocViews:
 Imports: 
     dplyr,
+    GenomeInfoDb,
     GenomicRanges,
+    ggplot2,
     magrittr,
+    parallel,
     readr
 Suggests: 
     knitr,

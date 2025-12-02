@@ -1,9 +1,8 @@
 # List of functions to obtain tract-encoding binary matrices for the different
 # tract-encoding approaches.
-# Some functions are designed for simulated data (functionname_sim), other for empirical data (functionname_emp).
-# Other functions work fine with both simulated and empirical data, hence they do not have any suffic (e.g., get_bin_mat_unique)
+# Each function has a simulated data version (functionname_sim), and an empirical data one (functionname_emp).
 
-#' Get binary matrix of tracts for uniqueness approach - EMPIRICAL and SIMULATION
+#' Get binary matrix of tracts for uniqueness approach - SIMULATION
 #'
 #' @param tracts_gr
 #'
@@ -11,7 +10,36 @@
 #' @export
 #'
 #' @examples
-get_bin_mat_unique <- function(tracts_gr){
+get_bin_mat_unique_sim <- function(tracts_gr){
+  if (!("name" %in% colnames(GenomicRanges::mcols(tracts_gr))))
+    stop(
+      "There is no metadata column named 'name'. \n Note that the column storing the ID of the individual has to be called 'name'."
+    )
+  tracts_unique_gr <- unique(tracts_gr)
+  if(length(tracts_unique_gr)>1){
+    bin_mat <- sapply(unique(tracts_gr$name), function(x) get_exact_match(filter(tracts_gr, name==x), tracts_unique_gr))
+  }else{
+    bin_mat <- matrix(1, nrow = 1, ncol = length(unique(tracts_gr$name)))
+    rownames(bin_mat) <- as.character(tracts_unique_gr)
+    colnames(bin_mat) <- unique(tracts_gr$name)
+  }
+  return(bin_mat)
+}
+
+#' Get binary matrix of tracts for uniqueness approach - EMPIRICAL
+#'
+#' @param tracts_gr
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+get_bin_mat_unique_emp <- function(tracts_gr){
+  if(!("name" %in% colnames(GenomicRanges::mcols(tracts_gr))))
+    stop(
+      "There is no metadata column named 'name'. \n Note that the column storing the ID of the individual has to be called 'name'."
+
+    )
   tracts_unique_gr <- unique(tracts_gr)
   if(length(tracts_unique_gr)>1){
     bin_mat <- sapply(unique(tracts_gr$name), function(x) get_exact_match(filter(tracts_gr, name==x), tracts_unique_gr))
@@ -29,18 +57,19 @@ get_bin_mat_unique <- function(tracts_gr){
 #' @param window_size
 #' @param step_size
 #' @param len_chr
+#' @param ncores
 #'
 #' @returns
 #' @export
 #'
 #' @examples
-get_bin_mat_windows_sim <- function(tracts_gr, window_size = 50e3, step_size = 50e3, len_chr = NULL){
+get_bin_mat_windows_sim <- function(tracts_gr, window_size = 50e3, step_size = 50e3, len_chr = NULL, ncores=1){
   if (is.null(len_chr)) {
     stop("Specify length of chromosome.")
   }
   windows_gr <- generate_windows_sim(window_size = window_size, step_size = step_size, len_chr = len_chr)
   bin_mat <- sapply(unique(tracts_gr$name), function(sample_id){
-    compute_bin_vec(tracts_gr, windows_gr, sample_id)
+    compute_bin_vec(tracts_gr, windows_gr, sample_id, ncores=ncores)
   })
   rownames(bin_mat) <- paste0(seqnames(windows_gr), ":",ranges(windows_gr))
   bin_mat <- ifelse(bin_mat>0, 1, 0)
@@ -53,15 +82,16 @@ get_bin_mat_windows_sim <- function(tracts_gr, window_size = 50e3, step_size = 5
 #' @param tracts_gr
 #' @param window_size
 #' @param step_size
+#' @param ncores
 #'
 #' @returns
 #' @export
 #'
 #' @examples
-get_bin_mat_windows_emp <- function(tracts_gr, window_size = 50e3, step_size = 50e3){
+get_bin_mat_windows_emp <- function(tracts_gr, window_size = 50e3, step_size = 50e3, ncores=1){
   windows_gr <- generate_windows_no_gap(window_size = window_size, step_size = step_size)
   bin_mat <- sapply(unique(tracts_gr$name), function(sample_id){
-    compute_bin_vec(tracts_gr, windows_gr, sample_id)
+    compute_bin_vec(tracts_gr, windows_gr, sample_id, ncores=ncores)
   })
   rownames(bin_mat) <- paste0(seqnames(windows_gr), ":",ranges(windows_gr))
   bin_mat <- ifelse(bin_mat>0, 1, 0)
@@ -69,7 +99,7 @@ get_bin_mat_windows_emp <- function(tracts_gr, window_size = 50e3, step_size = 5
   return(bin_mat)
 }
 
-#' Get binary matrix of tracts for subtracts approach - EMPIRICAL and SIMULATION
+#' Get binary matrix of tracts for subtracts approach - SIMULATION
 #'
 #' @param tracts_gr
 #'
@@ -77,14 +107,14 @@ get_bin_mat_windows_emp <- function(tracts_gr, window_size = 50e3, step_size = 5
 #' @export
 #'
 #' @examples
-get_bin_mat_subtracts <- function(tracts_gr){
+get_bin_mat_subtracts_sim <- function(tracts_gr){
   # iterate over each chromosome
   # to get one matrix for each chromosome
   col_names <- unique(tracts_gr$name)
   bin_mat_l <- lapply(as.character(unique(seqnames(tracts_gr))),
                       function(chrom) {
                         chrom_gr <- filter(tracts_gr, seqnames==chrom)
-                        mat <- get_bin_mat_subset_chrom(chrom_gr)
+                        mat <- get_bin_mat_subtracts_chrom(chrom_gr)
                         # This is because the some inds might not have tracts
                         # for some chromosomes and in order to create one big matrix it is important
                         # to have the dimensions consistent
@@ -96,7 +126,34 @@ get_bin_mat_subtracts <- function(tracts_gr){
   return(bin_mat)
 }
 
-#' Get binary matrix of tracts for recombination sites approach - EMPIRICAL and SIMULATION
+#' Get binary matrix of tracts for subtracts approach - EMPIRICAL
+#'
+#' @param tracts_gr
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+get_bin_mat_subtracts_emp <- function(tracts_gr){
+  # iterate over each chromosome
+  # to get one matrix for each chromosome
+  col_names <- unique(tracts_gr$name)
+  bin_mat_l <- lapply(as.character(unique(seqnames(tracts_gr))),
+                      function(chrom) {
+                        chrom_gr <- filter(tracts_gr, seqnames==chrom)
+                        mat <- get_bin_mat_subtracts_chrom(chrom_gr)
+                        # This is because the some inds might not have tracts
+                        # for some chromosomes and in order to create one big matrix it is important
+                        # to have the dimensions consistent
+                        full_matrix <- matrix(0, nrow = nrow(mat), ncol = length(col_names), dimnames = list(rownames(mat), col_names))
+                        full_matrix[rownames(mat), colnames(mat)] <- mat
+                        full_matrix
+                      })
+  bin_mat <- do.call(rbind, bin_mat_l)
+  return(bin_mat)
+}
+
+#' Get binary matrix of tracts for recombination sites approach - SIMULATION
 #'
 #' @param tracts_gr
 #'
@@ -104,7 +161,7 @@ get_bin_mat_subtracts <- function(tracts_gr){
 #' @export
 #'
 #' @examples
-get_bin_mat_sites <- function(tracts_gr){
+get_bin_mat_sites_sim <- function(tracts_gr){
   bin_mat <- sapply(unique(tracts_gr$name), function(sample_id){
     get_rec_sites(tracts_gr, sample_id)
   })
@@ -112,20 +169,48 @@ get_bin_mat_sites <- function(tracts_gr){
   return(bin_mat)
 }
 
+#' Get binary matrix of tracts for recombination sites approach - EMPIRICAL
+#'
+#' @param tracts_gr
+#'
+#' @returns
+#' @export
+#'
+#' @examples
+get_bin_mat_sites_emp <- function(tracts_gr){
+  # iterate over each chromosome
+  # to get one matrix for each chromosome
+  col_names <- unique(tracts_gr$name)
+  bin_mat_l <- lapply(as.character(unique(GenomicRanges::seqnames(tracts_gr))),
+                      function(chrom) {
+                        chrom_gr <- plyranges::filter(tracts_gr, seqnames==chrom)
+                        # Just calling the function for the simulation cause it si desginmed to work with only one chromosome
+                        mat <- get_bin_mat_sites_sim(chrom_gr)
+                        # This is because the some inds might not have tracts
+                        # for some chromosomes and in order to create one big matrix it is important
+                        # to have the dimensions consistent
+                        full_matrix <- matrix(0, nrow = nrow(mat), ncol = length(col_names), dimnames = list(rownames(mat), col_names))
+                        full_matrix[rownames(mat), colnames(mat)] <- mat
+                        full_matrix
+                      })
+  bin_mat <- do.call(rbind, bin_mat_l)
+  return(bin_mat)
+}
+
 get_rec_sites <- function(tracts_gr, sample_id){
-  tract_df <- tracts_gr %>% as.data.frame() %>% select(start, end)
+  tract_df <- tracts_gr %>% as.data.frame() %>% dplyr::select(start, end)
   # convert to matrix
   tract_mat <- tract_df %>% as.matrix()
   # get vector of starts and ends
   starts_ends <- tract_mat %>% c() %>% unique() %>% sort()
   # it is meant to be for only one chrom, so it the gr has to be only one chr
-  seqname <- seqnames(tracts_gr) %>% as.character() %>% unique()
+  seqname <- GenomicRanges::seqnames(tracts_gr) %>% as.character() %>% unique()
   # The start end vector is sorted, so for the start I will exclude the last element, and fot he ends of the ranges the first one
   names <- paste0(seqname, ":", as.character(starts_ends))
   vec <- rep(0, length(names))
   # get which ranges are in that sample
-  samp_tracts_gr <- tracts_gr %>% filter(name==sample_id)
-  samp_start_ends <- samp_tracts_gr %>% as.data.frame() %>% select(start, end) %>% as.matrix() %>% c() %>% unique() %>% sort()
+  samp_tracts_gr <- tracts_gr %>% plyranges::filter(name==sample_id)
+  samp_start_ends <- samp_tracts_gr %>% as.data.frame() %>% dplyr::select(start, end) %>% as.matrix() %>% c() %>% unique() %>% sort()
   names(vec) <- names
   vec[paste0(seqname, ":", as.character(samp_start_ends))] <- 1
   return(vec)
@@ -209,7 +294,7 @@ compute_bin_vec <- function(tracts_gr, windows_gr, sample_id = NULL, ncores = 1)
   cov <- coverage(sample_gr)
 
   # get a list where each element correspond to a chromosome with the coverage of the tracts for each bin
-  tract_cov_list <- mclapply(as.character(unique(seqnames(windows_gr))),
+  tract_cov_list <- parallel::mclapply(as.character(unique(seqnames(windows_gr))),
                              function(chrom) {
                                chrom_coverage <- cov[[chrom]]
                                chrom_gr <- windows_gr[seqnames(windows_gr) == chrom]

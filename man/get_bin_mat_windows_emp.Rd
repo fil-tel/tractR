@@ -4,10 +4,15 @@
 \alias{get_bin_mat_windows_emp}
 \title{Get binary matrix of tracts for windows approach - EMPIRICAL}
 \usage{
-get_bin_mat_windows_emp(tracts_gr, window_size = 50000, step_size = 50000)
+get_bin_mat_windows_emp(
+  tracts_gr,
+  window_size = 50000,
+  step_size = 50000,
+  ncores = 1
+)
 }
 \arguments{
-\item{step_size}{}
+\item{ncores}{}
 }
 \description{
 Get binary matrix of tracts for windows approach - EMPIRICAL
