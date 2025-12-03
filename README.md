@@ -154,6 +154,7 @@ a window and step size.
 
 ``` r
 # note that I am specifying the length of the simulated chromosome, size of the windows and the step size of the binning
+# The warning is due to incongruences with the starting indexing of the bins (0 and 1)
 bin_mat_wind_sim <- get_bin_mat_windows_sim(tracts_sim_gr, len_chr = 100e6, window_size = 50e3, step_size = 50e3)
 #> Warning in valid.GenomicRanges.seqinfo(x, suggest.trim = TRUE): GRanges object contains 1 out-of-bound range located on sequence chr1.
 #>   Note that ranges located on a sequence whose length is unknown (NA) or
@@ -292,11 +293,7 @@ a window and step size.
 
 ``` r
 # note that I am specifying the size of the windows and the step size of the binning
-tstart <- Sys.time()
 bin_mat_wind_emp <- get_bin_mat_windows_emp(tracts_emp_gr, window_size = 50e3, step_size = 50e3)
-tend <- Sys.time()
-tend-tstart
-#> Time difference of 10.23623 secs
 bin_mat_wind_emp[1:5, 1:5]
 #>                      84005 Bar31 Bon004 BOT14 BOT2016
 #> chr1:2350001-2400000     0     0      0     0       0
@@ -401,9 +398,196 @@ ggplot(data = data.frame(x=1:length(tfs_vec), y=tfs_vec))+geom_bar(mapping = aes
 
 # Graph-based tract sharing data structure
 
-Here I present the functions to obtain the graph-based tract sharing
+Here, I present the functions to obtain the graph-based tract sharing
 data structure introduced in my MSc thesis. Briefly, the idea is that
 given a set of tracts intersecting a specific genomic regions we can
 link these individuals using as information the sharing of recombination
 breakpoints that belong to these tracts (Section 2.2.6 of the
 [thesis](https://github.com/fil-tel/MSc-thesis/blob/main/Master_s_thesis_FT.pdf)).
+
+In order to obtain the graph we first need to obtain an adjacency matrix
+that tells us how the individuals/chromosomes carrying the tracts are
+linked to each other. This can be done using the function *get_adjacency
+matrix* and passing to the function the GRanges object storing the
+tracts, a chromosome of interest, and a genomic position. Here is an
+example:
+
+``` r
+adj_mat <- get_adj_mat(tracts_gr = tracts_emp_gr, chrom = "chr1", pos = 797e5)
+adj_mat
+#>              84005 BOT14 BOT2016 LugarCanto42 NEO281 NEO900 NEO904 tem002 VK256
+#> 84005            0     0       1            1      0      1      0      0     1
+#> BOT14            0     0       0            0      1      1      1      0     0
+#> BOT2016          1     0       0            1      0      1      0      1     1
+#> LugarCanto42     1     0       1            0      0      1      0      0     1
+#> NEO281           0     1       0            0      0      0      0      0     0
+#> NEO900           1     1       1            1      0      0      1      0     1
+#> NEO904           0     1       0            0      0      1      0      0     0
+#> tem002           0     0       1            0      0      0      0      0     0
+#> VK256            1     0       1            1      0      1      0      0     0
+```
+
+The matrix is symmetric and the row and column names correspond to the
+ID of the individuals carrying the tracts. Two individuals sharing one
+recombination breakpoints will have an entry equal to 1, two individuals
+sharing two rec breakpoints (i.e., they share the same tract) have an
+entry equal to 2.
+
+Obtained the adjacency matrix, we can easily build a graph using the R
+package *igraph*.
+
+``` r
+library(igraph)
+#> 
+#> Attaching package: 'igraph'
+#> The following object is masked from 'package:plyranges':
+#> 
+#>     groups
+#> The following object is masked from 'package:GenomicRanges':
+#> 
+#>     union
+#> The following object is masked from 'package:IRanges':
+#> 
+#>     union
+#> The following object is masked from 'package:S4Vectors':
+#> 
+#>     union
+#> The following objects are masked from 'package:BiocGenerics':
+#> 
+#>     normalize, path, union
+#> The following object is masked from 'package:tidyr':
+#> 
+#>     crossing
+#> The following objects are masked from 'package:dplyr':
+#> 
+#>     as_data_frame, groups, union
+#> The following objects are masked from 'package:stats':
+#> 
+#>     decompose, spectrum
+#> The following object is masked from 'package:base':
+#> 
+#>     union
+graph <- graph_from_adjacency_matrix(adj_mat, mode="undirected")
+```
+
+``` r
+plot(graph)
+```
+
+<img src="man/figures/README-unnamed-chunk-21-1.png" width="100%" />
+
+Given that empirical data carry information regarding space and time, if
+we are interested in visualizing the graph in a geographical context we
+can do so by using the *sf* and *sfnetworks* package. Here it is an
+example for the grph above.
+
+``` r
+# First I load the metadata to obtain the geographical locations of the samples of the graph
+metadata_raw <- read_tsv(file = system.file("extdata", "neo.impute.1000g.sampleInfo_clusterInfo.txt", package = "tractR"))
+#> Rows: 4172 Columns: 32
+#> ── Column specification ────────────────────────────────────────────────────────
+#> Delimiter: "\t"
+#> chr (22): sampleId, popId, site, country, region, groupLabel, groupAge, flag...
+#> dbl (10): shapeA, latitude, longitude, age14C, ageHigh, ageLow, ageAverage, ...
+#> 
+#> ℹ Use `spec()` to retrieve the full column specification for this data.
+#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+# Filter only for the samples that are in adjacency matrix
+metadata <- metadata_raw %>% filter(sampleId %in% colnames(adj_mat))
+```
+
+``` r
+library(sf)
+#> Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.4.0; sf_use_s2() is TRUE
+library(sfnetworks)
+#> 
+#> Attaching package: 'sfnetworks'
+#> The following object is masked from 'package:IRanges':
+#> 
+#>     active
+#> The following object is masked from 'package:S4Vectors':
+#> 
+#>     active
+library(igraph)
+library(ggraph)
+library(tidygraph)
+#> 
+#> Attaching package: 'tidygraph'
+#> The following object is masked from 'package:igraph':
+#> 
+#>     groups
+#> The following object is masked from 'package:plyranges':
+#> 
+#>     n
+#> The following objects are masked from 'package:IRanges':
+#> 
+#>     active, slice
+#> The following objects are masked from 'package:S4Vectors':
+#> 
+#>     active, rename
+#> The following object is masked from 'package:stats':
+#> 
+#>     filter
+
+metadata_sf <- metadata %>% st_as_sf(coords = c("longitude", "latitude")) %>%  st_set_crs(4326) %>% st_jitter(amount = 2)
+
+# get edges from graph
+edge_df <- igraph::as_edgelist(graph) %>% as.data.frame()
+colnames(edge_df) <- c("from", "to")
+
+# What follows it is mainly copy pasted from the internet
+# create sfnetworks
+net <- sfnetworks::sfnetwork(nodes = metadata_sf, edges = edge_df, directed = FALSE, edges_as_lines = TRUE)
+#> Checking if spatial network structure is valid...
+#> Spatial network structure is valid
+
+world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
+sf::st_agr(world) <- "constant"
+# bbox <- st_as_sfc(st_bbox(c(xmin = -25, xmax = 120, ymin = 150, ymax = 150), crs = st_crs(world)))
+# eurasia <- world %>% filter(continent %in% c("Europe", "Asia"))
+bbox <- st_as_sfc(st_bbox(c(xmin = -20, xmax = 120, ymin = 10, ymax = 90), crs = st_crs(world)))
+western_eurasia <- st_crop(st_make_valid(world), bbox)
+# western_eurasia <- world
+# western_eurasia <- world %>% filter(continent %in% c("Europe", "Asia"))
+
+# activate nodes
+net = net %>%
+  activate("nodes") 
+# net <- tidygraph::convert(
+#   net, 
+#   to_spatial_explicit, 
+#   .clean = TRUE
+# )
+
+edge_df <- as_data_frame(net, what = "edges")
+
+edge_df <- edge_df %>%
+  mutate(pair = paste0(pmin(from, to), "_", pmax(from, to))) %>%
+  add_count(pair, name = "pair_count") %>%  
+  mutate(is_identical = ifelse(pair_count > 1, "Yes", "No"))
+
+net <- net %>%
+  activate("edges") %>%
+  mutate(
+    pair = edge_df$pair,
+    pair_count = edge_df$pair_count,
+    is_identical = edge_df$is_identical
+  )
+
+
+p <- ggplot() +
+  geom_sf(data = western_eurasia) +
+  geom_sf(data = st_as_sf(net, "edges"),
+          mapping = aes(linetype = is_identical)) +
+  geom_sf(data = metadata_sf,
+          mapping = aes(color = sampleId, size = ageAverage)) +
+  guides(color = guide_legend(title =
+                                "Sample ID"),
+         linetype = guide_legend(title = "Identical tract")) +
+  coord_sf(crs = 3035) +   scale_size_continuous(name = "Sample age", range = c(1, 3))+
+  theme(legend.position="none")
+
+p
+```
+
+<img src="man/figures/README-unnamed-chunk-23-1.png" width="100%" />

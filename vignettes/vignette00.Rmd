@@ -151,10 +151,7 @@ The boundaries of the bins are defined by a window and step size.
 
 ```{r}
 # note that I am specifying the size of the windows and the step size of the binning
-tstart <- Sys.time()
 bin_mat_wind_emp <- get_bin_mat_windows_emp(tracts_emp_gr, window_size = 50e3, step_size = 50e3)
-tend <- Sys.time()
-tend-tstart
 bin_mat_wind_emp[1:5, 1:5]
 ```
 

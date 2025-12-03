@@ -2,6 +2,7 @@
 
 export("%>%")
 export(compute_tfs)
+export(get_adj_mat)
 export(get_bin_mat_sites_emp)
 export(get_bin_mat_sites_sim)
 export(get_bin_mat_subtracts_emp)

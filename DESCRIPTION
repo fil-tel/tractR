@@ -16,6 +16,7 @@ Imports:
     ggplot2,
     magrittr,
     parallel,
+    plyranges,
     readr
 Suggests: 
     knitr,
