@@ -82,6 +82,7 @@ At this point to get the binary matrix it is enough to pass the tracts in its GR
 ## Uniqueness approach
 
 Brief remind of the approach:
+
 Each row of the matrix corresponds to a unique tract.
 
 ```{r}
@@ -92,6 +93,7 @@ bin_mat_unique_sim[1:5, 1:5]
 ## Windows approach
 
 Brief remind of the approach:
+
 The boundaries of the bins are defined by a window and step size. 
 
 ```{r}
@@ -104,6 +106,7 @@ bin_mat_wind_sim[1:5, 1:5]
 ## Subtracts approach
 
 Brief remind of the approach:
+
 The boundaries of the bins are defined by the set of recombination sites. 
 
 ```{r}
@@ -114,6 +117,7 @@ bin_mat_subtracts_sim[1:5, 1:5]
 ## Recombination breakpoint approach
 
 Brief remind of the approach:
+
 Each row of the matrix corresponds to a recombination breakpoint position.
 
 ```{r}
@@ -156,6 +160,7 @@ bin_mat_unique_emp[1:5, 1:5]
 ## Windows approach
 
 Brief remind of the approach:
+
 The boundaries of the bins are defined by a window and step size. 
 
 ```{r}
@@ -250,11 +255,13 @@ metadata <- metadata_raw %>% filter(sampleId %in% colnames(adj_mat))
 ```
 
 ```{r}
-library(sf)
+suppressPackageStartupMessages({
+  library(sf)
 library(sfnetworks)
 library(igraph)
 library(ggraph)
-library(tidygraph)
+library(tidygraph)  
+})
 
 metadata_sf <- metadata %>% st_as_sf(coords = c("longitude", "latitude")) %>%  st_set_crs(4326) %>% st_jitter(amount = 2)
 

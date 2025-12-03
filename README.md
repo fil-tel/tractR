@@ -127,8 +127,9 @@ in its GRanges object form to the corresponding function
 
 ## Uniqueness approach
 
-Brief remind of the approach: Each row of the matrix corresponds to a
-unique tract.
+Brief remind of the approach:
+
+Each row of the matrix corresponds to a unique tract.
 
 ``` r
 bin_mat_unique_sim <- get_bin_mat_unique_sim(tracts_sim_gr)
@@ -149,8 +150,9 @@ bin_mat_unique_sim[1:5, 1:5]
 
 ## Windows approach
 
-Brief remind of the approach: The boundaries of the bins are defined by
-a window and step size.
+Brief remind of the approach:
+
+The boundaries of the bins are defined by a window and step size.
 
 ``` r
 # note that I am specifying the length of the simulated chromosome, size of the windows and the step size of the binning
@@ -191,8 +193,10 @@ bin_mat_wind_sim[1:5, 1:5]
 
 ## Subtracts approach
 
-Brief remind of the approach: The boundaries of the bins are defined by
-the set of recombination sites.
+Brief remind of the approach:
+
+The boundaries of the bins are defined by the set of recombination
+sites.
 
 ``` r
 bin_mat_subtracts_sim <- get_bin_mat_subtracts_sim(tracts_sim_gr)
@@ -207,8 +211,10 @@ bin_mat_subtracts_sim[1:5, 1:5]
 
 ## Recombination breakpoint approach
 
-Brief remind of the approach: Each row of the matrix corresponds to a
-recombination breakpoint position.
+Brief remind of the approach:
+
+Each row of the matrix corresponds to a recombination breakpoint
+position.
 
 ``` r
 bin_mat_site_sim <- get_bin_mat_sites_sim(tracts_sim_gr)
@@ -288,8 +294,9 @@ bin_mat_unique_emp[1:5, 1:5]
 
 ## Windows approach
 
-Brief remind of the approach: The boundaries of the bins are defined by
-a window and step size.
+Brief remind of the approach:
+
+The boundaries of the bins are defined by a window and step size.
 
 ``` r
 # note that I am specifying the size of the windows and the step size of the binning
@@ -497,37 +504,13 @@ metadata <- metadata_raw %>% filter(sampleId %in% colnames(adj_mat))
 ```
 
 ``` r
-library(sf)
-#> Linking to GEOS 3.12.1, GDAL 3.8.4, PROJ 9.4.0; sf_use_s2() is TRUE
+suppressPackageStartupMessages({
+  library(sf)
 library(sfnetworks)
-#> 
-#> Attaching package: 'sfnetworks'
-#> The following object is masked from 'package:IRanges':
-#> 
-#>     active
-#> The following object is masked from 'package:S4Vectors':
-#> 
-#>     active
 library(igraph)
 library(ggraph)
-library(tidygraph)
-#> 
-#> Attaching package: 'tidygraph'
-#> The following object is masked from 'package:igraph':
-#> 
-#>     groups
-#> The following object is masked from 'package:plyranges':
-#> 
-#>     n
-#> The following objects are masked from 'package:IRanges':
-#> 
-#>     active, slice
-#> The following objects are masked from 'package:S4Vectors':
-#> 
-#>     active, rename
-#> The following object is masked from 'package:stats':
-#> 
-#>     filter
+library(tidygraph)  
+})
 
 metadata_sf <- metadata %>% st_as_sf(coords = c("longitude", "latitude")) %>%  st_set_crs(4326) %>% st_jitter(amount = 2)
 
