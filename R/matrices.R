@@ -1,6 +1,6 @@
 # List of functions to obtain tract-encoding binary matrices for the different
 # tract-encoding approaches.
-# Each function has a simulated data version (functionname_sim), and an empirical data one (functionname_emp).
+# Each function has a simulated data version (functionname_sim), and an empirical data one (functionname_emp)..
 
 #' Get binary matrix of tracts for uniqueness approach - SIMULATION
 #'
