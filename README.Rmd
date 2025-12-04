@@ -21,10 +21,17 @@ Here, you can find some basic examples on how to use these functions.
 
 ## Installation
 
+Prior to the installation of the package, it is recommended to install the Bioconductor dependencies separately.
+
+``` r
+# install.packages("BiocManager")
+BiocManager::install(c("GenomeInfoDb", "GenomicRanges", "plyranges"))
+```
+
 You can install the development version of tractR from [GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("pak")
+# install.packages("devtools")
 devtools::install_github("fil-tel/tractR")
 ```
 
